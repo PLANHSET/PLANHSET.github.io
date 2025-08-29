@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Котик-сезонник</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background: #f0f8ff;
+      touch-action: none;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    #game {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #cat {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 60px;
+      background-image: url('https://i.pinimg.com/originals/09/1d/db/091ddb73d4c01431edaf3548bb58c9fd.png');
+      background-size: cover;
+      border-radius: 50%;
+      z-index: 10;
+    }
+
+    .item {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-size: cover;
+      top: -50px;
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    #season-buttons {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 100;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 20px;
+      background: #ff6b6b;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    button.active {
+      background: #4ecdc4;
+    }
+
+    #message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      background: rgba(255,255,255,0.8);
+      padding: 20px;
+      border-radius: 15px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div id="cat"></div>
+    <div id="score">Очки: 0</div>
+    <div id="season-buttons">
+      <button data-season="spring">ВЕСНА</button>
+      <button data-season="summer">ЛЕТО</button>
+      <button data-season="autumn">ОСЕНЬ</button>
+      <button data-season="winter">ЗИМА</button>
+    </div>
+    <div id="message"></div>
+  </div>
+
+  <script>
+    const game = document.getElementById("game");
+    const cat = document.getElementById("cat");
+    const scoreDisplay = document.getElementById("score");
+    const message = document.getElementById("message");
+    const buttons = document.querySelectorAll("#season-buttons button");
+
+    let score = 0;
+    let currentSeason = null;
+    let items = [];
+    let gameActive = true;
+    let itemInterval;
+    let requestId;
+    let rainInterval;
+
+    const seasonItems = {
+      spring: [
+        { name: "flower", color: "pink", emoji: "🌸" },
+        { name: "raindrop", color: "lightblue", emoji: "🌧️" },
+        { name: "butterfly", color: "yellow", emoji: "🦋" }
+      ],
+      summer: [
+        { name: "sun", color: "yellow", emoji: "☀️" },
+        { name: "icecream", color: "pink", emoji: "🍦" },
+        { name: "beachball", color: "orange", emoji: "⚽" }
+      ],
+      autumn: [
+        { name: "leaf", color: "orange", emoji: "🍂" },
+        { name: "apple", color: "red", emoji: "🍎" },
+        { name: "pumpkin", color: "orange", emoji: "🎃" }
+      ],
+      winter: [
+        { name: "snowflake", color: "white", emoji: "❄️" },
+        { name: "mitten", color: "gray", emoji: "🧤" },
+        { name: "santa", color: "red", emoji: "🎅" }
+      ]
+    };
+
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        buttons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentSeason = btn.dataset.season;
+        message.style.display = "block";
+        message.textContent = `Теперь лови предметы ${btn.textContent}!`;
+        setTimeout(() => message.style.display = "none", 2000);
+        if (gameActive) startRain();
+      });
+    });
+
+    function moveCat(e) {
+      const x = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+      const gameRect = game.getBoundingClientRect();
+      let catX = x - gameRect.left;
+      if (catX < 30) catX = 30;
+      if (catX > gameRect.width - 30) catX = gameRect.width - 30;
+      cat.style.left = catX + "px";
+    }
+
+    game.addEventListener("touchmove", e => {
+      e.preventDefault();
+      moveCat(e);
+    }, { passive: false });
+
+    game.addEventListener("mousemove", moveCat);
+
+    function createItem() {
+      if (!currentSeason || !gameActive) return;
+
+      const item = document.createElement("div");
+      item.classList.add("item");
+
+      const isCorrect = Math.random() < 0.7;
+      const otherSeasons = Object.keys(seasonItems).filter(s => s !== currentSeason);
+      let wrongPool = [];
+      otherSeasons.forEach(s => {
+        wrongPool = wrongPool.concat(seasonItems[s]);
+      });
+
+      const pool = isCorrect ? seasonItems[currentSeason] : wrongPool;
+      const itemType = pool[Math.floor(Math.random() * pool.length)];
+
+      item.dataset.correct = isCorrect ? "true" : "false";
+      item.style.left = Math.random() * (game.offsetWidth - 40) + "px";
+      item.style.backgroundColor = itemType.color;
+      item.textContent = itemType.emoji;
+      item.style.fontSize = "30px";
+      item.style.display = "flex";
+      item.style.justifyContent = "center";
+      item.style.alignItems = "center";
+
+      game.appendChild(item);
+      items.push({
+        element: item,
+        speed: 2 + Math.random() * 2
+      });
+    }
+
+    function updateItems() {
+      if (!gameActive) return;
+
+      const catRect = cat.getBoundingClientRect();
+
+      items = items.filter(obj => {
+        const item = obj.element;
+        const top = parseFloat(item.style.top) || -50;
+        if (top > game.offsetHeight) {
+          item.remove();
+          return false;
+        }
+
+        const newTop = top + obj.speed;
+        item.style.top = newTop + "px";
+
+        const itemRect = item.getBoundingClientRect();
+        if (
+          catRect.left < itemRect.right &&
+          catRect.right > itemRect.left &&
+          catRect.top < itemRect.bottom &&
+          catRect.bottom > itemRect.top
+        ) {
+          const isCorrect = item.dataset.correct === "true";
+          if (isCorrect) {
+            score++;
+          } else {
+            score = Math.max(0, score - 1);
+          }
+          scoreDisplay.textContent = `Очки: ${score}`;
+
+          if (score <= 0 || score >= 30) {
+            gameActive = false;
+            message.textContent = score <= 0 ? "Ты проиграл!" : "Ты выиграл!";
+            message.style.display = "block";
+            setTimeout(() => message.style.display = "none", 2000);
+            clearInterval(itemInterval);
+            clearInterval(rainInterval);
+            cancelAnimationFrame(requestId);
+          }
+
+          item.remove();
+          return false;
+        }
+
+        return true;
+      });
+
+      requestId = requestAnimationFrame(updateItems);
+    }
+
+    function startRain() {
+      if (!gameActive) return;
+      clearInterval(itemInterval);
+      itemInterval = setInterval(createItem, 1000);
+    }
+
+    // Инициализация игры
+    requestId = requestAnimationFrame(updateItems);
+    startRain();
+    rainInterval = setInterval(startRain, 5000);
+  </script>
+</body>
+</html>
