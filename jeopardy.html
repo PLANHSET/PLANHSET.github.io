@@ -1,0 +1,209 @@
+<html>
+	<meta charset="utf-8">
+	<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=block" rel="stylesheet">
+	<script>
+		const DATA = {
+			'Учат в школе': [
+				['В школе учат вычитать и умножать, а ЭТО — не делать', 'малышей не обижать'],
+				['В каком месяце есть 28 дней?', 'в любом'],
+				['В сказке А. С. Пушкина была введена принципиально новая система оплаты труда. Покажите это действие при помощи пальцев', 'три щелчка'],
+				['ЭТА СТРАНА получится, если между двумя одинаковыми буквами поставить маленькую лошадь', 'Япония'],
+				['В книге, прочитанной вами еще в 1-м классе, за вопросом: «Где ёж?» следует еще 25. Назовите последние три', 'Э, Ю, Я']
+			],
+			'Округлая тема': [
+				['Отгадайте загадку: «Четыре брата бегут, друг друга не нагонят»', 'колёса'],
+				['Яйцо всмятку варится 3 минуты. Сколько времени потребуется, чтобы сварить 3 яйца всмятку?', '3 минуты'],
+				['Из этих яиц могут появиться и вороны, и пингвины, и черепахи, и даже техника… Вот это сюрприз! Назовите основной ингредиент этих яиц', 'шоколад'],
+				['Вы сидите в вертолете, перед вами конь, сзади верблюд. Где Вы находитесь?', 'на карусели'],
+				['Писатель-фантаст Борис Штерн говорил, что первой прочитанной им книгой был фантастический детектив с тремя неудавшимися покушениями на убийство и одним удавшимся. Вы все, безусловно, тоже знаете эту короткую историю. Назовите её главного героя', 'Колобок']
+			],
+			'Холод': [
+				['При этой температуре вода превращается в лёд', '0 градусов по Цельсию'],
+				['ЭТО — и зимняя одежда, и новогодний салат с селёдкой, и пушистый ледяной налёт в морозилке', 'шуба'],
+				['Так называется русское блюдо из мясного бульона, сгущённого до состояния желе', 'холодец'],
+				['Назовите единственный континент, где нет белых медведей, даже завезённых человеком', 'Антарктида'],
+				['Эту непроизвольную реакцию на холод мы унаследовали от покрытых шерстью предков-зверей, но называем её словом, которое напоминает про насекомых', 'мурашки'],
+			],
+			'Новогодняя история': [
+				['В Финляндии — Йоулупукки, во Франции — Пер Ноэль, в Нидерландах — Синтерклаас. А у нас?', 'Дед Мороз'],
+				['Именно на нём в канун Рождества кузнец летал в Петербург за царской обувью', 'чёрт'],
+				['В ЭТУ СТРАНУ Санта-Клаус приплывает на доске для сёрфинга в самой середине лета, а подарки, по некоторым сведениям, развозит верхом на кенгуру', 'Австралия'],
+				['Первоначально рождественские ёлки украшались только сладостями, фруктами и орехами. Но в 1848 году в Германии случился неурожай яблок, поэтому мастера-стеклодувы из города Лауша изобрели ИХ', 'Ёлочные шары'],
+				['Наши названия месяцев происходят из древнего Рима. По-латински 7 будет «septem», 8 — «octo», 9 — «novem», 10 — «decem». Какой месяц римляне считали первым в году?', 'март'],
+			],
+		};
+	</script>
+	<style>
+		body {
+			color: #fff;
+			font-family: oswald, sans-serif;
+			font-size: 40px;
+			user-select: none;
+		}
+
+		.table {
+			box-sizing: border-box;
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			display: table;
+			text-align: center;
+			background: linear-gradient(30deg, #234, #228);
+		}
+
+		.theme {
+			display: table-row;	
+			height: calc(100% / 6);
+			box-sizing: border-box;
+		}
+
+		.theme > * {
+			display: table-cell;
+			text-transform: uppercase;
+			vertical-align: middle;
+			border: 1px solid #fff3;
+		}
+
+		.theme-name {
+			text-transform: uppercase;
+			max-width: 20vw;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			line-height: 0.9;
+		}
+
+		.q {
+			padding: 10px 20px;
+			position: relative;
+		}
+
+		.q:before,
+		.q:after {
+			content: '';
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			top: 0;
+			left: 0;
+			background: transparent;
+			z-index: 0;
+		}
+
+		.q.open:before {
+			animation: expand-h 1s .3s;
+		}
+
+		.q.open:after {
+			animation: expand-v 1s .3s;
+		}
+
+		.q.open {
+			animation: blink .6s;
+		}
+
+		.popup {
+			background: linear-gradient(30deg, #234, #228);
+			position: fixed;
+			z-index: 3;
+			width: 100%;
+			height: 100%;
+			inset: 0;
+			display: table;
+			text-transform: initial;
+			transition: all ease .5s;
+			transform: scale(.01);
+			opacity: 0;
+		}
+
+		.popup div {
+			padding: 60px;
+			display: table-cell;
+			vertical-align: middle;
+		}
+
+		.q.open .popup {
+			opacity: 1;
+			transform: none;
+			transition-delay: 1s;
+		}
+
+		.popup .answer {
+			margin-top: 50px;
+			margin-bottom: -50px;
+			opacity: 0;
+			transition: opacity .3s;
+			color: #ff0;
+			text-transform: uppercase;
+		}
+
+		.q.answered .answer {
+			opacity: 1;
+		}
+
+		.q.blocked {
+			pointer-events: none;
+			color: transparent;
+		}
+
+		@keyframes blink {
+			10% { color: #000; background: #ff0; }
+			20% { color: #fff; background: #234; }
+			30% { color: #000; background: #ff0; }
+		}
+
+		@keyframes expand-h {
+			10% { background: #ff0; transform: scaleX(1.0); }
+			100% { background: #ff00; transform: scaleX(9.0); }
+		}
+		
+		@keyframes expand-v {
+			10% { background: #ff0; transform: scaleY(1.0); }
+			100% { background: #ff00; transform: scaleY(12.0); }
+		}
+
+		.hurray {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%) scale(0);
+			opacity: 0;
+			pointer-events: none;
+			font-size: 80px;
+			padding: 60vh;
+			font-weight: bold;
+			text-align: center;
+			text-shadow: 0 0 10px #234;
+			backdrop-filter: blur(5px);
+			background: radial-gradient(#567, #5670, #0000);
+			transition: all ease .5s;
+		}
+
+		.table:not(:has(.q:not(.blocked))) + .hurray {
+			transform: translate(-50%, -50%);
+			opacity: 1;
+		}
+	</style>
+	<body>
+		<div class="table">
+		</div>
+		<div class="hurray">С&nbsp;НОВЫМ ГОДОМ!</div>
+		<script>
+			document.addEventListener('click', e => {
+				const q = e.target.closest('.q');
+				if (q) {
+					if (!q.classList.contains('open')) q.classList.add('open');
+					else if (!q.classList.contains('answered')) q.classList.add('answered');
+					else { q.classList.remove('open'); q.classList.add('blocked'); }
+				}
+			});
+
+			document.querySelector('.table').innerHTML += Object.keys(DATA).map(topic => `<div class="theme">
+				<div class="theme-name">${topic}</div>
+				${DATA[topic].map(([q, a], i) => `<a class="q">${(i + 1) * 100}
+					<div class="popup"><div>${q}<p class="answer">${a}</p></div></div>
+				</a>`).join('')}
+			</div>`).join('');
+		</script>
+	</body>
+</html>
